@@ -1,0 +1,91 @@
+
+> build
+> vite build
+
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+[plugin @laravel/vite-plugin-wayfinder] Types generated for actions, routes, form variants
+transforming...
+[32m???[39m 2741 modules transformed.
+node.exe : [31m???[39m Build failed in 9.42s
+At line:1 char:1
++ & "C:\laragon\bin\nodejs\node-v22/node.exe" "C:\laragon\bin\nodejs\no ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([31m???[39m Build failed in  
+   9.42s:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[31merror during build:
+[31mresources/js/layouts/auth/auth-simple-layout.tsx (3:9): "home" is not 
+exported by "resources/js/routes/index.ts", imported by 
+"resources/js/layouts/auth/auth-simple-layout.tsx".[31m
+file: [36mD:/Dev/Internal/si-pintar/resources/js/layouts/auth/auth-simple-l
+ayout.tsx:3:9[31m
+[33m
+1: import { Link } from '@inertiajs/react';
+2: import AppLogoIcon from '@/components/app-logo-icon';
+3: import { home } from '@/routes';
+            ^
+4: import type { AuthLayoutProps } from '@/types';
+[31m
+    at getRollupError (file:///D:/Dev/Internal/si-pintar/node_modules/rollup
+/dist/es/shared/parseAst.js:402:41)
+    at error (file:///D:/Dev/Internal/si-pintar/node_modules/rollup/dist/es/
+shared/parseAst.js:398:42)
+    at Module.error (file:///D:/Dev/Internal/si-pintar/node_modules/rollup/d
+ist/es/shared/node-entry.js:17040:16)
+    at Module.traceVariable (file:///D:/Dev/Internal/si-pintar/node_modules/
+rollup/dist/es/shared/node-entry.js:17452:29)
+    at ModuleScope.findVariable (file:///D:/Dev/Internal/si-pintar/node_modu
+les/rollup/dist/es/shared/node-entry.js:15070:39)
+    at FunctionScope.findVariable (file:///D:/Dev/Internal/si-pintar/node_mo
+dules/rollup/dist/es/shared/node-entry.js:5673:38)
+    at FunctionBodyScope.findVariable (file:///D:/Dev/Internal/si-pintar/nod
+e_modules/rollup/dist/es/shared/node-entry.js:5673:38)
+    at TrackingScope.findVariable (file:///D:/Dev/Internal/si-pintar/node_mo
+dules/rollup/dist/es/shared/node-entry.js:5673:38)
+    at BlockScope.findVariable (file:///D:/Dev/Internal/si-pintar/node_modul
+es/rollup/dist/es/shared/node-entry.js:5673:38)
+    at Identifier.bind (file:///D:/Dev/Internal/si-pintar/node_modules/rollu
+p/dist/es/shared/node-entry.js:5447:40)
+    at CallExpression.bind (file:///D:/Dev/Internal/si-pintar/node_modules/r
+ollup/dist/es/shared/node-entry.js:2829:23)
+    at CallExpression.bind (file:///D:/Dev/Internal/si-pintar/node_modules/r
+ollup/dist/es/shared/node-entry.js:12179:15)
+    at AssignmentExpression.bind (file:///D:/Dev/Internal/si-pintar/node_mod
+ules/rollup/dist/es/shared/node-entry.js:2829:23)
+    at ExpressionStatement.bind (file:///D:/Dev/Internal/si-pintar/node_modu
+les/rollup/dist/es/shared/node-entry.js:2829:23)
+    at BlockStatement.bind (file:///D:/Dev/Internal/si-pintar/node_modules/r
+ollup/dist/es/shared/node-entry.js:2825:28)
+    at IfStatement.bind (file:///D:/Dev/Internal/si-pintar/node_modules/roll
+up/dist/es/shared/node-entry.js:2829:23)
+    at BlockStatement.bind (file:///D:/Dev/Internal/si-pintar/node_modules/r
+ollup/dist/es/shared/node-entry.js:2825:28)
+    at FunctionDeclaration.bind (file:///D:/Dev/Internal/si-pintar/node_modu
+les/rollup/dist/es/shared/node-entry.js:2829:23)
+    at ExportDefaultDeclaration.bind (file:///D:/Dev/Internal/si-pintar/node
+_modules/rollup/dist/es/shared/node-entry.js:2829:23)
+    at ExportDefaultDeclaration.bind (file:///D:/Dev/Internal/si-pintar/node
+_modules/rollup/dist/es/shared/node-entry.js:6939:15)
+    at Program.bind (file:///D:/Dev/Internal/si-pintar/node_modules/rollup/d
+ist/es/shared/node-entry.js:2825:28)
+    at Module.bindReferences (file:///D:/Dev/Internal/si-pintar/node_modules
+/rollup/dist/es/shared/node-entry.js:17019:18)
+    at Graph.sortAndBindModules (file:///D:/Dev/Internal/si-pintar/node_modu
+les/rollup/dist/es/shared/node-entry.js:22866:20)
+    at Graph.build (file:///D:/Dev/Internal/si-pintar/node_modules/rollup/di
+st/es/shared/node-entry.js:22764:14)
+    at async file:///D:/Dev/Internal/si-pintar/node_modules/rollup/dist/es/s
+hared/node-entry.js:23455:13
+    at async catchUnfinishedHookActions (file:///D:/Dev/Internal/si-pintar/n
+ode_modules/rollup/dist/es/shared/node-entry.js:22925:16)
+    at async rollupInternal (file:///D:/Dev/Internal/si-pintar/node_modules/
+rollup/dist/es/shared/node-entry.js:23450:5)
+    at async buildEnvironment (file:///D:/Dev/Internal/si-pintar/node_module
+s/vite/dist/node/chunks/config.js:33541:12)
+    at async Object.build (file:///D:/Dev/Internal/si-pintar/node_modules/vi
+te/dist/node/chunks/config.js:33900:19)
+    at async Object.buildApp (file:///D:/Dev/Internal/si-pintar/node_modules
+/vite/dist/node/chunks/config.js:33897:153)
+    at async CAC.<anonymous> (file:///D:/Dev/Internal/si-pintar/node_modules
+/vite/dist/node/cli.js:629:3)[39m

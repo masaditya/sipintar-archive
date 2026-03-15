@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIPINTAR - Sistem Pencatatan Surat Keluar</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-top: #60A5FA; /* Sky Blue Light */
+            --bg-bottom: #1D4ED8; /* Deep Blue Water */
+            --card-glass: rgba(255, 255, 255, 0.9);
+            --text-main: #1E293B;
+            --text-muted: #64748B;
+            
+            /* KPI Colors */
+            --kpi-teal: #14B8A6;
+            --kpi-orange: #F97316;
+            --kpi-purple: #8B5CF6;
+            --kpi-blue: #3B82F6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(180deg, var(--bg-top) 0%, #3B82F6 40%, var(--bg-bottom) 100%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Decorative Clouds */
+        .clouds-container {
+            position: fixed; top: -50px; left: 0; width: 100%; height: 150px;
+            z-index: 0; pointer-events: none; display: flex; justify-content: space-around; opacity: 0.6;
+        }
+        .cloud { background: white; border-radius: 50%; position: absolute; filter: blur(4px); }
+        .cloud:nth-child(1) { width: 300px; height: 300px; top: -150px; left: -50px; }
+        .cloud:nth-child(2) { width: 400px; height: 400px; top: -200px; left: 20%; }
+        .cloud:nth-child(3) { width: 250px; height: 250px; top: -100px; left: 50%; }
+        .cloud:nth-child(4) { width: 500px; height: 500px; top: -250px; right: -100px; }
+        .cloud:nth-child(5) { width: 350px; height: 350px; top: -180px; right: 25%; }
+
+        /* City Silhouette */
+        .city-silhouette {
+            position: fixed; top: 15vh; left: 0; width: 100%; height: 100px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none"><path d="M0,100 L0,80 L20,80 L20,60 L40,60 L40,90 L60,90 L60,50 L90,50 L90,70 L110,70 L110,40 L150,40 L150,80 L180,80 L180,30 L220,30 L220,70 L250,70 L250,50 L280,50 L280,80 L320,80 L320,20 L370,20 L370,60 L400,60 L400,90 L430,90 L430,40 L480,40 L480,80 L520,80 L520,30 L570,30 L570,70 L600,70 L600,50 L640,50 L640,90 L680,90 L680,20 L730,20 L730,80 L760,80 L760,40 L810,40 L810,70 L840,70 L840,50 L880,50 L880,80 L920,80 L920,30 L970,30 L970,80 L1000,80 L1000,100 Z" fill="rgba(255,255,255,0.15)"/></svg>') repeat-x;
+            background-size: contain; z-index: 0; pointer-events: none;
+        }
+
+        /* App Container & View Management */
+        .app-container {
+            position: relative; z-index: 10; width: 100%; min-height: 100vh;
+            display: flex; padding: 20px; gap: 20px;
+        }
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+        .view-section { display: none; animation: zoomIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .view-section.active { display: block; }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.98) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+        /* Glassmorphism */
+        .glass-box {
+            background: var(--card-glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border-radius: 20px; border: 2px solid rgba(255, 255, 255, 0.5); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        /* SIDEBAR STYLES */
+        .sidebar-glass {
+            width: 280px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px);
+            border-radius: 20px; border: 2px solid rgba(255, 255, 255, 0.6); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0;
+            display: none; /* Hidden on login */
+        }
+        .sidebar-glass.active { display: flex; }
+        .sidebar-header { padding: 25px 20px; border-bottom: 1px solid rgba(0,0,0,0.05); text-align: center; }
+        .sidebar-header h3 { font-weight: 900; color: var(--bg-bottom); margin: 0; letter-spacing: 1px; }
+        .sidebar-menu { padding: 15px 10px; flex-grow: 1; overflow-y: auto; }
+        .menu-label { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin: 15px 0 5px 15px; letter-spacing: 1px;}
+        .menu-item {
+            display: flex; align-items: center; padding: 10px 15px; margin-bottom: 5px; border-radius: 12px;
+            color: var(--text-main); font-weight: 700; text-decoration: none; cursor: pointer; transition: all 0.2s;
+        }
+        .menu-item:hover { background: rgba(59, 130, 246, 0.1); color: var(--bg-bottom); }
+        .menu-item.active { background: var(--bg-bottom); color: white; box-shadow: 0 4px 10px rgba(29, 78, 216, 0.3); }
+        .menu-item i { width: 25px; font-size: 1.1rem; }
+        .sidebar-footer { padding: 15px; border-top: 1px solid rgba(0,0,0,0.05); text-align: center;}
+
+        /* Common Forms */
+        .center-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 90vh; }
+        .form-modal { width: 100%; max-width: 550px; padding: 40px; position: relative; }
+        .illustration-top { position: absolute; top: -80px; left: 50%; transform: translateX(-50%); width: 160px; height: 120px; display: flex; justify-content: center; align-items: flex-end; }
+        .form-title { font-weight: 800; color: var(--bg-bottom); margin-bottom: 5px; text-align: center;}
+        .form-subtitle { text-align: center; color: var(--text-muted); margin-bottom: 30px; font-weight: 600;}
+        
+        .input-group-custom {
+            display: flex; align-items: center; background: white; border-radius: 12px;
+            border: 1px solid #E2E8F0; margin-bottom: 20px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .input-group-custom i { padding: 15px; color: var(--text-muted); font-size: 1.1rem; }
+        .input-group-custom input, .input-group-custom select {
+            border: none; outline: none; padding: 15px 15px 15px 0; width: 100%; background: transparent; color: var(--text-main); font-weight: 600;
+        }
+        
+        .btn-gradient {
+            background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); color: white; border: none; border-radius: 12px; padding: 12px;
+            font-weight: 800; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(29, 78, 216, 0.4); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; width: 100%;
+        }
+        .btn-gradient:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(29, 78, 216, 0.6); color: white;}
+        .btn-light-custom {
+            background: rgba(255,255,255,0.8); border: 2px solid #E2E8F0; color: var(--text-muted); border-radius: 12px; padding: 12px; font-weight: 700; transition: all 0.2s; width: 100%;
+        }
+        .btn-light-custom:hover { background: #E2E8F0; color: var(--text-main); }
+
+        /* Dashboard Specifics */
+        .dash-header { display: flex; align-items: center; position: relative; margin-bottom: 20px; }
+        .dash-title { font-size: 3rem; font-weight: 900; color: white; margin: 0; text-shadow: 2px 4px 8px rgba(0,0,0,0.2); line-height: 1;}
+        .dash-subtitle { color: rgba(255,255,255,0.9); font-weight: 600; font-size: 1.1rem; margin-top: 5px;}
+
+        .kpi-wrapper {
+            background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%); border-radius: 15px; padding: 20px; text-align: center; position: relative;
+            box-shadow: inset 0 2px 5px rgba(255,255,255,0.3), 0 4px 15px rgba(0,0,0,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);
+        }
+        .kpi-wrapper.teal { background-color: var(--kpi-teal); }
+        .kpi-wrapper.orange { background-color: var(--kpi-orange); }
+        .kpi-wrapper.purple { background-color: var(--kpi-purple); }
+        .kpi-wrapper.blue { background-color: var(--kpi-blue); }
+        
+        .kpi-header { font-size: 1.1rem; font-weight: 700; border-bottom: 2px solid rgba(255,255,255,0.2); padding-bottom: 10px; margin-bottom: 10px; }
+        .kpi-number { font-size: 3rem; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 15px; line-height: 1; transition: opacity 0.3s ease;}
+        .kpi-icon { background: rgba(0,0,0,0.1); padding: 10px; border-radius: 10px; font-size: 2rem;}
+
+        .dash-bottom-grid { display: flex; gap: 20px; align-items: stretch; margin-top: 20px; }
+        .dash-side-menu { width: 250px; display: flex; flex-direction: column; gap: 15px; }
+        .menu-btn {
+            display: flex; align-items: center; padding: 15px 20px; border-radius: 15px; color: white; font-weight: 700; text-decoration: none; border: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: transform 0.2s; cursor: pointer; text-align: left;
+        }
+        .menu-btn:hover { transform: translateY(-3px); color: white;}
+        .menu-btn i { font-size: 1.5rem; margin-right: 15px; background: rgba(255,255,255,0.2); padding: 8px; border-radius: 8px;}
+        
+        .btn-m-blue { background: linear-gradient(135deg, #3B82F6, #2563EB); }
+        .btn-m-teal { background: linear-gradient(135deg, #14B8A6, #0D9488); }
+        .btn-m-purple { background: linear-gradient(135deg, #8B5CF6, #7C3AED); }
+
+        .chart-panel { flex-grow: 1; padding: 20px; }
+        .chart-title { font-weight: 800; color: white; margin-bottom: 15px; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); font-size: 1.1rem;}
+
+        /* Modal & Custom Elements */
+        .illus-3d { position: relative; width: 120px; height: 100px; }
+        .illus-book { position: absolute; background: white; border: 2px solid #333; border-radius: 5px; box-shadow: 2px 2px 0 #333;}
+        .illus-b1 { width: 80px; height: 60px; bottom: 10px; left: 10px; transform: rotate(-10deg); background: #FDE047;}
+        .illus-b2 { width: 70px; height: 80px; bottom: 15px; left: 30px; transform: rotate(5deg); background: #38BDF8;}
+        .illus-b3 { width: 90px; height: 50px; bottom: 0; left: 20px; background: white; display: flex; justify-content: center; align-items: center; color: #333; font-weight: 900; z-index: 2;}
+
+        #confirmModal {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
+            display: none; justify-content: center; align-items: center; z-index: 9999;
+        }
+        #confirmModal.show { display: flex; }
+        .modal-glass {
+            background: var(--card-glass); padding: 30px; border-radius: 20px; width: 90%; max-width: 500px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); text-align: left;
+        }
+        .detail-row { display: flex; margin-bottom: 10px; border-bottom: 1px dashed #ccc; padding-bottom: 10px;}
+        .detail-label { width: 130px; font-weight: 700; color: var(--text-muted); }
+        .detail-value { flex-grow: 1; font-weight: 800; color: var(--text-main); }
+
+        .glass-filter {
+            background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); border-radius: 20px; padding: 8px 20px; display: inline-flex; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .glass-filter select {
+            border: none; background: transparent; font-weight: 800; color: var(--bg-bottom); outline: none; cursor: pointer; padding-left: 10px; font-family: 'Nunito', sans-serif; font-size: 1rem;
+        }
+
+        /* --- BUKU AGENDA TABLE DESIGN --- */
+        .table-glass { width: 100%; border-collapse: separate; border-spacing: 0 10px; margin-top: 10px;}
+        .table-glass th { border: none; font-weight: 800; color: var(--bg-bottom); padding: 10px 20px; text-transform: uppercase; font-size: 0.85rem;}
+        .table-glass td { background: rgba(255,255,255,0.7); padding: 15px 20px; border: none; color: var(--text-main); font-weight: 600; vertical-align: middle; transition: background 0.2s;}
+        .table-glass tr td:first-child { border-radius: 12px 0 0 12px; }
+        .table-glass tr td:last-child { border-radius: 0 12px 12px 0; }
+        .table-glass tr:hover td { background: rgba(255,255,255,1); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+
+    <!-- Background Elements -->
+    <div class="clouds-container">
+        <div class="cloud"></div><div class="cloud"></div><div class="cloud"></div>
+        <div class="cloud"></div><div class="cloud"></div>
+    </div>
+    <div class="city-silhouette"></div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirmModal">
+        <div class="modal-glass">
+            <h4 class="fw-bold mb-3 text-primary"><i class="fas fa-question-circle me-2"></i>Konfirmasi Pengajuan</h4>
+            <p class="text-muted mb-4">Apakah Anda sudah yakin dengan detail isi, klasifikasi, perihal, tujuan surat, dan unit pengolah berikut?</p>
+            
+            <div class="mb-4">
+                <div class="detail-row"><div class="detail-label">Nomor Surat</div><div class="detail-value text-success fs-5" id="c-nomor">-</div></div>
+                <div class="detail-row"><div class="detail-label">Kode Klasifikasi</div><div class="detail-value" id="c-klasifikasi">-</div></div>
+                <div class="detail-row"><div class="detail-label">Tujuan Surat</div><div class="detail-value" id="c-tujuan">-</div></div>
+                <div class="detail-row"><div class="detail-label">Isi / Perihal</div><div class="detail-value" id="c-perihal">-</div></div>
+                <div class="detail-row"><div class="detail-label">Unit Pengolah</div><div class="detail-value" id="c-unit">-</div></div>
+                <div class="detail-row border-0 pb-0"><div class="detail-label">Tanggal Surat</div><div class="detail-value" id="c-tanggal">-</div></div>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-end">
+                <button class="btn btn-light fw-bold px-4 rounded-pill border" onclick="closeConfirmModal()">Cek Kembali</button>
+                <button class="btn btn-primary fw-bold px-4 rounded-pill shadow" onclick="submitConfirmed()"><i class="fas fa-check me-2"></i>Ya, Simpan Surat</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container">
+        
+        <!-- DYNAMIC SIDEBAR -->
+        <aside class="sidebar-glass" id="sidebar">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-paper-plane text-primary me-2"></i>SIPINTAR</h3>
+                <small class="text-muted fw-bold">Pencatatan Surat Keluar</small>
+            </div>
+            
+            <div class="sidebar-menu">
+                <a class="menu-item active" id="nav-dashboard" onclick="navigate('dashboard')">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                
+                <div class="menu-label">Kategori Umum</div>
+                <a class="menu-item" id="nav-input-umum" onclick="navigate('input', 'umum')"><i class="fas fa-pen-square"></i> Input Surat Umum</a>
+                <a class="menu-item" id="nav-agenda-umum" onclick="navigate('agenda', 'umum')"><i class="fas fa-book"></i> Agenda Umum</a>
+                
+                <div class="menu-label">Kategori Pengadaan</div>
+                <a class="menu-item" id="nav-input-pengadaan" onclick="navigate('input', 'pengadaan')"><i class="fas fa-file-invoice"></i> Input Pengadaan</a>
+                <a class="menu-item" id="nav-agenda-pengadaan" onclick="navigate('agenda', 'pengadaan')"><i class="fas fa-book"></i> Agenda Pengadaan</a>
+                
+                <div class="menu-label">Kategori SK Kadin</div>
+                <a class="menu-item" id="nav-input-sk" onclick="navigate('input', 'sk')"><i class="fas fa-file-signature"></i> Input SK Kadin</a>
+                <a class="menu-item" id="nav-agenda-sk" onclick="navigate('agenda', 'sk')"><i class="fas fa-book"></i> Agenda SK Kadin</a>
+            </div>
+
+            <div class="sidebar-footer">
+                <button onclick="handleLogout()" class="btn btn-light w-100 fw-bold border text-danger rounded-pill">
+                    <i class="fas fa-sign-out-alt me-2"></i> Keluar Sistem
+                </button>
+            </div>
+        </aside>
+
+        <div class="main-content">
+            
+            <!-- VIEW: LOGIN -->
+            <section id="view-login" class="view-section active w-100">
+                <div class="center-wrapper">
+                    <div class="glass-box form-modal mt-5">
+                        <div class="illustration-top">
+                            <div class="illus-3d">
+                                <div class="illus-book illus-b1"></div>
+                                <div class="illus-book illus-b2"></div>
+                                <div class="illus-book illus-b3"><i class="fas fa-envelope-open-text fa-2x"></i></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 30px;">
+                            <h2 class="form-title">SIPINTAR</h2>
+                            <p class="form-subtitle">Sistem Pencatatan Surat Keluar</p>
+                            
+                            <form onsubmit="handleLogin(event)">
+                                <div class="input-group-custom">
+                                    <i class="fas fa-user"></i>
+                                    <input type="text" required placeholder="Username">
+                                </div>
+                                <div class="input-group-custom">
+                                    <i class="fas fa-lock"></i>
+                                    <input type="password" required placeholder="Password">
+                                </div>
+                                <button type="submit" class="btn-gradient">Log In Dashboard</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: DASHBOARD -->
+            <section id="view-dashboard" class="view-section w-100">
+                
+                <header class="dash-header">
+                    <div>
+                        <h1 class="dash-title">DASHBOARD SIPINTAR</h1>
+                        <p class="dash-subtitle">Selamat datang kembali di panel statistik surat keluar.</p>
+                    </div>
+                </header>
+
+                <div class="container-fluid px-0">
+                    
+                    <!-- Filter Section & Agenda Global Button -->
+                    <div class="d-flex justify-content-between align-items-end mb-3">
+                        <h4 class="text-white fw-bold mb-0" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.2);"><i class="fas fa-chart-pie me-2"></i>Ringkasan Statistik</h4>
+                        
+                        <div class="d-flex gap-3 align-items-center">
+                            <div class="glass-filter">
+                                <i class="fas fa-calendar-alt text-primary"></i>
+                                <select id="timeFilter" onchange="updateDashboardData()">
+                                    <option value="minggu">Mingguan</option>
+                                    <option value="bulan" selected>Bulanan</option>
+                                    <option value="tahun">Tahunan</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Tombol untuk melihat Buku Agenda Keseluruhan -->
+                            <button class="btn btn-light fw-bold rounded-pill shadow-sm text-primary px-4 py-2" onclick="navigate('agenda', 'all')" style="border: 2px solid white;">
+                                <i class="fas fa-book-open me-2"></i>Lihat Buku Agenda
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- KPI Row -->
+                    <div class="row g-3">
+                        <div class="col-md-3"><div class="kpi-wrapper teal"><div class="kpi-header">Sekretariat</div><div class="kpi-number" id="kpi-sek"><i class="fas fa-envelope-open-text kpi-icon"></i> 120</div></div></div>
+                        <div class="col-md-3"><div class="kpi-wrapper orange"><div class="kpi-header">Bidang Perpustakaan</div><div class="kpi-number" id="kpi-per"><i class="fas fa-book kpi-icon"></i> 75</div></div></div>
+                        <div class="col-md-3"><div class="kpi-wrapper purple"><div class="kpi-header">Bidang Kearsipan</div><div class="kpi-number" id="kpi-ars"><i class="fas fa-archive kpi-icon"></i> 60</div></div></div>
+                        <div class="col-md-3"><div class="kpi-wrapper blue"><div class="kpi-header">Total Surat Keluar</div><div class="kpi-number" id="kpi-tot"><i class="fas fa-paper-plane kpi-icon"></i> 255</div></div></div>
+                    </div>
+
+                    <!-- Bottom Layout -->
+                    <div class="dash-bottom-grid">
+                        
+                        <!-- Charts -->
+                        <div class="chart-panel">
+                            <h5 class="chart-title">Jumlah Surat Keluar per Unit</h5>
+                            <div style="height: 230px; position: relative;"><canvas id="barChart"></canvas></div>
+                        </div>
+
+                        <div class="chart-panel" style="width: 350px; flex-grow: 0;">
+                            <h5 class="chart-title text-center">Persentase Surat Keluar</h5>
+                            <div style="height: 230px; position: relative; display: flex; justify-content: center;"><canvas id="pieChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: FORM INPUT PENGISIAN SURAT -->
+            <section id="view-input" class="view-section w-100">
+                <div class="center-wrapper">
+                    <div class="glass-box form-modal mt-4">
+                        <div class="illustration-top">
+                            <div class="illus-3d">
+                                <div class="illus-book illus-b1" style="background:#4ADE80;"></div>
+                                <div class="illus-book illus-b2" style="background:#F472B6;"></div>
+                                <div class="illus-book illus-b3" style="width:100px;"><i class="fas fa-pen-nib fa-2x"></i></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 30px;">
+                            <h3 class="form-title" id="form-title-dynamic">Pengisian Surat Keluar</h3>
+                            <p class="form-subtitle">Lengkapi detail surat untuk disimpan ke database</p>
+                            
+                            <form id="form-surat" onsubmit="handleFormSubmit(event)">
+                                
+                                <label class="form-label-custom ps-2">Kode Klasifikasi</label>
+                                <div class="input-group-custom">
+                                    <i class="fas fa-folder text-primary"></i>
+                                    <select id="input-klasifikasi" required>
+                                        <option value="" disabled selected>Pilih kode klasifikasi...</option>
+                                        <option value="000 - Umum">000 - Umum</option>
+                                        <option value="100 - Pemerintahan">100 - Pemerintahan</option>
+                                        <option value="400 - Kesra">400 - Kesejahteraan Rakyat</option>
+                                        <option value="800 - Kepegawaian">800 - Kepegawaian</option>
+                                        <option value="900 - Keuangan">900 - Keuangan</option>
+                                    </select>
+                                </div>
+
+                                <label class="form-label-custom ps-2">Tujuan Surat</label>
+                                <div class="input-group-custom">
+                                    <i class="fas fa-user-tie text-primary"></i>
+                                    <input type="text" id="input-tujuan" required placeholder="Masukkan instansi/tujuan surat...">
+                                </div>
+
+                                <label class="form-label-custom ps-2">Isi Surat / Perihal</label>
+                                <div class="input-group-custom">
+                                    <i class="fas fa-clipboard-list text-primary"></i>
+                                    <input type="text" id="input-perihal" required placeholder="Masukkan ringkasan perihal...">
+                                </div>
+
+                                <label class="form-label-custom ps-2">Unit Pengolah</label>
+                                <div class="input-group-custom">
+                                    <i class="fas fa-building text-primary"></i>
+                                    <select id="input-unit" required>
+                                        <option value="" disabled selected>Pilih unit pengolah...</option>
+                                        <option value="Sekretariat">Sekretariat</option>
+                                        <option value="Bidang Perpustakaan">Bidang Perpustakaan</option>
+                                        <option value="Bidang Kearsipan">Bidang Kearsipan</option>
+                                    </select>
+                                </div>
+
+                                <label class="form-label-custom ps-2">Tanggal Surat</label>
+                                <div class="input-group-custom">
+                                    <i class="fas fa-calendar-day text-primary"></i>
+                                    <input type="date" id="input-tanggal" required>
+                                </div>
+                                
+                                <div class="d-flex gap-3 mt-4 pt-3 border-top border-light">
+                                    <button type="submit" class="btn-gradient w-100">
+                                        Simpan Surat <i class="fas fa-check-circle ms-2"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: BUKU AGENDA DIGITAL -->
+            <section id="view-agenda" class="view-section w-100">
+                <header class="dash-header mb-4">
+                    <div>
+                        <h1 class="dash-title" id="agenda-title-dynamic">BUKU AGENDA</h1>
+                        <p class="dash-subtitle">Daftar Rekapitulasi Surat Keluar Instansi</p>
+                    </div>
+                </header>
+
+                <div class="glass-box p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <h4 class="fw-bold mb-0" style="color: var(--bg-bottom);"><i class="fas fa-book-open me-2 text-primary"></i>Data Surat Keluar</h4>
+                        </div>
+                        
+                        <div class="d-flex gap-3">
+                            <div class="input-group-custom mb-0" style="width: 250px; border-radius: 20px;">
+                                <i class="fas fa-search py-2"></i>
+                                <input type="text" class="py-2" placeholder="Cari surat...">
+                            </div>
+                            <button class="btn btn-outline-primary bg-white fw-bold rounded-pill px-4 shadow-sm border-2"><i class="fas fa-print me-2"></i>Cetak Laporan</button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table-glass">
+                            <thead>
+                                <tr>
+                                    <th width="5%">No</th>
+                                    <th width="10%">Tanggal</th>
+                                    <th width="15%">Nomor Surat</th>
+                                    <th width="15%">Klasifikasi</th>
+                                    <th width="15%">Tujuan</th>
+                                    <th width="15%">Isi / Perihal</th>
+                                    <th width="10%" id="col-kategori">Jenis Pengajuan</th>
+                                    <th width="10%">Unit Pengolah</th>
+                                </tr>
+                            </thead>
+                            <tbody id="agendaTableBody">
+                                <!-- Data populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script>
+        let isLoggedIn = false;
+        let barChart = null;
+        let pieChart = null;
+        
+        // Data & Tracker untuk Sistem Terpisah
+        let currentType = 'umum'; // Menyimpan state jenis surat yang sedang diinput
+        
+        // Counter Penomoran masing-masing jenis
+        let counters = {
+            'umum': 1,
+            'pengadaan': 1,
+            'sk': 0
+        };
+
+        // Database Array Sementara
+        let agendaData = [
+            { id: 2, type: 'pengadaan', tanggal: '12-03-2026', nomorSurat: '100/001/PENGADAAN/2026', klasifikasi: '100 - Pemerintahan', tujuan: 'Dinas Kominfo Bojonegoro', perihal: 'Undangan Rapat Koordinasi Digitalisasi', unit: 'Sekretariat' },
+            { id: 1, type: 'umum', tanggal: '10-03-2026', nomorSurat: '000/001/UMUM/2026', klasifikasi: '000 - Umum', tujuan: 'Kantor Kecamatan Kapas', perihal: 'Permohonan Data Arsip Statis', unit: 'Bidang Kearsipan' }
+        ];
+
+        // Central Navigation
+        function navigate(viewId, param = null) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            
+            if (viewId !== 'login' && !isLoggedIn) viewId = 'login';
+            
+            // Toggle Sidebar
+            const sidebar = document.getElementById('sidebar');
+            if(viewId === 'login') {
+                sidebar.classList.remove('active');
+            } else {
+                sidebar.classList.add('active');
+            }
+
+            document.getElementById(`view-${viewId}`).classList.add('active');
+
+            // Set Active Menu Items di Sidebar
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            let activeNavId = `nav-${viewId}`;
+            if(param && viewId !== 'dashboard') activeNavId += `-${param}`;
+            const activeNav = document.getElementById(activeNavId);
+            if (activeNav) activeNav.classList.add('active');
+
+            // Specific View Logic
+            if (viewId === 'dashboard') setTimeout(initCharts, 100);
+            
+            if (viewId === 'input') {
+                currentType = param || 'umum'; // simpan status tipe
+                let titleStr = "Umum";
+                if(currentType === 'pengadaan') titleStr = "Pengadaan";
+                if(currentType === 'sk') titleStr = "SK Kadin";
+                
+                document.getElementById('form-title-dynamic').innerText = `Pengajuan Surat ${titleStr}`;
+                document.getElementById('input-tanggal').value = new Date().toISOString().split('T')[0];
+            }
+
+            if (viewId === 'agenda') {
+                renderAgenda(param || 'all');
+            }
+        }
+
+        // Auth
+        function handleLogin(e) { e.preventDefault(); isLoggedIn = true; navigate('dashboard'); }
+        function handleLogout() { isLoggedIn = false; navigate('login'); }
+
+        // Dashboard Data
+        const dashData = {
+            minggu: { sek: 25, per: 15, ars: 10, chart: [25, 15, 10], pie: [50, 30, 20] },
+            bulan: { sek: 120, per: 75, ars: 60, chart: [120, 75, 60], pie: [47, 29, 24] },
+            tahun: { sek: 1450, per: 890, ars: 720, chart: [1450, 890, 720], pie: [47, 29, 24] }
+        };
+
+        function updateDashboardData() {
+            const filter = document.getElementById('timeFilter').value;
+            const data = dashData[filter];
+            
+            const kpis = [
+                { id: 'kpi-sek', val: data.sek, icon: 'fa-envelope-open-text' },
+                { id: 'kpi-per', val: data.per, icon: 'fa-book' },
+                { id: 'kpi-ars', val: data.ars, icon: 'fa-archive' },
+                { id: 'kpi-tot', val: data.sek + data.per + data.ars, icon: 'fa-paper-plane' }
+            ];
+
+            kpis.forEach(item => {
+                const el = document.getElementById(item.id);
+                el.style.opacity = 0;
+                setTimeout(() => {
+                    el.innerHTML = `<i class="fas ${item.icon} kpi-icon"></i> ${item.val}`;
+                    el.style.opacity = 1;
+                }, 200);
+            });
+
+            if (barChart) { barChart.data.datasets[0].data = data.chart; barChart.update(); }
+            if (pieChart) { pieChart.data.datasets[0].data = data.pie; pieChart.update(); }
+        }
+
+        // Agenda Render Logic
+        function renderAgenda(filterType) {
+            const tbody = document.getElementById('agendaTableBody');
+            tbody.innerHTML = '';
+            
+            // Set Titles & Column visibility
+            let title = "BUKU AGENDA GLOBAL";
+            let showKategori = true;
+
+            if (filterType === 'umum') { title = "AGENDA SURAT UMUM"; showKategori = false; }
+            if (filterType === 'pengadaan') { title = "AGENDA SURAT PENGADAAN"; showKategori = false; }
+            if (filterType === 'sk') { title = "AGENDA SURAT SK KADIN"; showKategori = false; }
+            
+            document.getElementById('agenda-title-dynamic').innerText = title;
+            document.getElementById('col-kategori').style.display = showKategori ? 'table-cell' : 'none';
+
+            // Filter Data
+            let filteredData = (filterType === 'all') ? agendaData : agendaData.filter(d => d.type === filterType);
+
+            // Render Rows
+            filteredData.forEach((item, index) => {
+                let catBadge = '';
+                if(item.type === 'umum') catBadge = '<span class="badge bg-primary">Surat Umum</span>';
+                if(item.type === 'pengadaan') catBadge = '<span class="badge" style="background-color:#14B8A6">Pengadaan</span>';
+                if(item.type === 'sk') catBadge = '<span class="badge" style="background-color:#8B5CF6">SK Kadin</span>';
+
+                let tr = document.createElement('tr');
+                let html = `
+                    <td class="fw-bold">${filteredData.length - index}</td>
+                    <td>${item.tanggal}</td>
+                    <td class="text-primary fw-bold">${item.nomorSurat}</td>
+                    <td><span class="badge bg-primary bg-opacity-10 text-primary border border-primary rounded-pill px-2">${item.klasifikasi}</span></td>
+                    <td>${item.tujuan}</td>
+                    <td>${item.perihal}</td>
+                `;
+                
+                if(showKategori) html += `<td>${catBadge}</td>`; // Hanya muncul di global
+                
+                html += `<td><span class="badge bg-secondary rounded-pill">${item.unit}</span></td>`;
+                tr.innerHTML = html;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Form Submit & Modal
+        function handleFormSubmit(e) {
+            e.preventDefault(); 
+            
+            const klasifikasiFull = document.getElementById('input-klasifikasi').value;
+            const klasifikasiCode = klasifikasiFull.split(' - ')[0]; // Extract code, e.g. "000"
+
+            document.getElementById('c-klasifikasi').textContent = klasifikasiFull;
+            document.getElementById('c-tujuan').textContent = document.getElementById('input-tujuan').value;
+            document.getElementById('c-perihal').textContent = document.getElementById('input-perihal').value;
+            document.getElementById('c-unit').textContent = document.getElementById('input-unit').value;
+            
+            // Tanggal
+            let dateVal = document.getElementById('input-tanggal').value;
+            let formattedDate = dateVal.split('-').reverse().join('-');
+            document.getElementById('c-tanggal').textContent = formattedDate;
+
+            // Generate Auto Nomor (Independen berdasar tipe)
+            const nextNum = String(counters[currentType] + 1).padStart(3, '0');
+            const year = new Date().getFullYear();
+            
+            let suffix = currentType.toUpperCase();
+            if(currentType === 'sk') suffix = "SK-KADIN";
+
+            const autoNomor = `${klasifikasiCode}/${nextNum}/${suffix}/${year}`;
+            document.getElementById('c-nomor').textContent = autoNomor;
+
+            document.getElementById('confirmModal').classList.add('show');
+        }
+
+        function closeConfirmModal() { document.getElementById('confirmModal').classList.remove('show'); }
+
+        // EKSEKUSI DATA
+        function submitConfirmed() {
+            closeConfirmModal();
+            
+            // Update the specific counter
+            counters[currentType]++;
+
+            // Build Data Object
+            const newData = {
+                id: agendaData.length + 1,
+                type: currentType,
+                nomorSurat: document.getElementById('c-nomor').textContent,
+                klasifikasi: document.getElementById('c-klasifikasi').textContent,
+                tujuan: document.getElementById('c-tujuan').textContent,
+                perihal: document.getElementById('c-perihal').textContent,
+                unit: document.getElementById('c-unit').textContent,
+                tanggal: document.getElementById('c-tanggal').textContent
+            };
+
+            // Tambahkan di atas (unshift) agar langsung muncul teratas
+            agendaData.unshift(newData);
+
+            document.getElementById('form-surat').reset();
+            
+            // Redirect ke Agenda yang spesifik
+            navigate('agenda', currentType);
+        }
+
+        // Chart Init
+        function initCharts() {
+            const cTeal = '#14B8A6'; const cOrange = '#F97316'; const cPurple = '#8B5CF6';
+            Chart.defaults.color = '#FFFFFF'; Chart.defaults.font.family = "'Nunito', sans-serif";
+
+            const barCtx = document.getElementById('barChart');
+            if (barCtx) {
+                if(barChart) barChart.destroy();
+                barChart = new Chart(barCtx.getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: ['Sekretariat', 'Bidang Perpustakaan', 'Bidang Kearsipan'], datasets: [{ data: [120, 75, 60], backgroundColor: [cTeal, cOrange, cPurple], borderRadius: 6, barPercentage: 0.6 }] },
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(255,255,255,0.9)', titleColor: '#333', bodyColor: '#333', padding: 10, cornerRadius: 8 } }, scales: { x: { grid: { color: 'rgba(255,255,255,0.2)', drawBorder: false }, ticks: { stepSize: 60, font: { weight: 'bold' } }, max: 180 }, y: { grid: { display: false }, ticks: { font: { weight: 'bold', size: 14 } } } } }
+                });
+            }
+
+            const pieCtx = document.getElementById('pieChart');
+            if (pieCtx) {
+                if(pieChart) pieChart.destroy();
+                pieChart = new Chart(pieCtx.getContext('2d'), {
+                    type: 'pie',
+                    data: { labels: ['Sekretariat', 'Bidang Perpustakaan', 'Bidang Kearsipan'], datasets: [{ data: [47, 29, 24], backgroundColor: [cTeal, cOrange, cPurple], borderWidth: 3, borderColor: 'transparent', hoverOffset: 4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, layout: { padding: 10 }, plugins: { legend: { position: 'right', labels: { usePointStyle: true, pointStyle: 'circle', padding: 20, font: { size: 13, weight: '600' } } }, tooltip: { callbacks: { label: function(c) { return ' ' + c.label + ': ' + c.raw + '%'; } }, backgroundColor: 'rgba(255,255,255,0.9)', titleColor: '#333', bodyColor: '#333', } } }
+                });
+            }
+            updateDashboardData();
+        }
+
+        window.onload = () => navigate('login');
+    </script>
+</body>
+</html>
