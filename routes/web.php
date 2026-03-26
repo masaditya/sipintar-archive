@@ -14,6 +14,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('surat/{id}', [SuratKeluarController::class, 'update'])->name('sipintar.update');
     Route::delete('surat/{id}', [SuratKeluarController::class, 'destroy'])->name('sipintar.destroy');
     Route::get('surat/agenda/{kategori?}', [SuratKeluarController::class, 'agenda'])->name('sipintar.agenda');
+    Route::get('search-klasifikasi', [SuratKeluarController::class, 'searchKlasifikasi'])->name('sipintar.search-klasifikasi');
 });
 
 require __DIR__.'/settings.php';

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import SipintarLayout from '@/layouts/SipintarLayout';
 import { useForm } from '@inertiajs/react';
 import { Calendar } from '@/components/ui/calendar';
@@ -25,52 +26,34 @@ export default function Create({ kategori }: CreateProps) {
     const [showModal, setShowModal] = useState(false);
     const [showTujuanDropdown, setShowTujuanDropdown] = useState(false);
     const [showKlasifikasiDropdown, setShowKlasifikasiDropdown] = useState(false);
+    const [filteredKlasifikasi, setFilteredKlasifikasi] = useState<any[]>([]);
+    const [isLoadingKlasifikasi, setIsLoadingKlasifikasi] = useState(false);
 
-    const klasifikasiOptions = [
-        "000 - Umum",
-        "010 - Urusan Dalam",
-        "020 - Peralatan",
-        "030 - Kekayaan Daerah",
-        "040 - Perpustakaan / Dokumen / Kearsipan / Sandi",
-        "050 - Perencanaan",
-        "060 - Organisasi dan Ketatalaksanaan",
-        "070 - Penelitian",
-        "080 - Konferensi",
-        "090 - Perjalanan Dinas",
-        "100 - Pemerintahan",
-        "110 - Pemerintahan Pusat",
-        "120 - Pemerintahan Provinsi",
-        "130 - Pemerintahan Kabupaten / Kota",
-        "140 - Pemerintahan Desa",
-        "200 - Politik",
-        "300 - Keamanan dan Ketertiban",
-        "400 - Kesejahteraan Rakyat",
-        "410 - Pembangunan Desa",
-        "420 - Pendidikan",
-        "430 - Kebudayaan",
-        "440 - Kesehatan",
-        "450 - Agama",
-        "460 - Sosial",
-        "470 - Kependudukan",
-        "500 - Perekonomian",
-        "510 - Perdagangan",
-        "520 - Pertanian",
-        "530 - Perindustrian",
-        "540 - Pertambangan / Fasilitas",
-        "550 - Perhubungan",
-        "560 - Tenaga Kerja",
-        "570 - Penanaman Modal",
-        "580 - Perbankan / Moneter",
-        "590 - Agraria",
-        "600 - Pekerjaan Umum dan Ketenagaan",
-        "700 - Pengawasan",
-        "800 - Kepegawaian",
-        "900 - Keuangan"
-    ];
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (data.klasifikasi && data.klasifikasi.length >= 2) {
+                fetchKlasifikasi(data.klasifikasi);
+            } else {
+                setFilteredKlasifikasi([]);
+            }
+        }, 300);
 
-    const filteredKlasifikasi = data.klasifikasi === ''
-        ? klasifikasiOptions
-        : klasifikasiOptions.filter(opt => opt.toLowerCase().includes(data.klasifikasi.toLowerCase()));
+        return () => clearTimeout(timer);
+    }, [data.klasifikasi]);
+
+    const fetchKlasifikasi = async (query: string) => {
+        setIsLoadingKlasifikasi(true);
+        try {
+            const response = await axios.get('/search-klasifikasi', {
+                params: { query }
+            });
+            setFilteredKlasifikasi(response.data);
+        } catch (error) {
+            console.error('Error fetching klasifikasi:', error);
+        } finally {
+            setIsLoadingKlasifikasi(false);
+        }
+    };
 
     const tujuanOptions = [
         "Bupati Bojonegoro",
@@ -205,13 +188,18 @@ export default function Create({ kategori }: CreateProps) {
                                                 key={idx} 
                                                 className="px-5 py-3 hover:bg-blue-50 cursor-pointer text-slate-700 font-bold border-b border-slate-100 last:border-none transition-colors duration-150"
                                                 onClick={() => {
-                                                    setData('klasifikasi', opt);
+                                                    setData('klasifikasi', opt.name);
                                                     setShowKlasifikasiDropdown(false);
                                                 }}
                                             >
-                                                {opt}
+                                                {opt.name}
                                             </div>
                                         ))}
+                                    </div>
+                                )}
+                                {isLoadingKlasifikasi && (
+                                    <div className="absolute right-12 top-1/2 -translate-y-1/2 z-30 text-blue-500">
+                                        <i className="fas fa-spinner fa-spin"></i>
                                     </div>
                                 )}
                                 {errors.klasifikasi && <span className="text-red-500 text-sm mt-1 block pl-2">{errors.klasifikasi}</span>}

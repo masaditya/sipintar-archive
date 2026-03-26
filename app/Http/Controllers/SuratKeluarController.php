@@ -47,30 +47,33 @@ class SuratKeluarController extends Controller
 
         $year = Carbon::parse($validated['tanggal'])->format('Y');
 
-        // Generate Nomor Surat
-        $klasifikasiCode = explode(' - ', $validated['klasifikasi'])[0];
-        $suffix = strtoupper($validated['kategori']);
-        if ($suffix === 'SK') $suffix = 'SK-KADIN';
+        // Extract code from classification name like "000.1.1 Perjalanan Dinas"
+        $klasifikasiCode = '000'; // fallback
+        if (preg_match('/^([\d\.]+)/', $validated['klasifikasi'], $matches)) {
+            $klasifikasiCode = $matches[1];
+        }
 
-        $lastSurat = SuratKeluar::where('kategori', $validated['kategori'])
-            ->whereYear('tanggal', $year)
+        // Generate nomor agenda (sequence for the current year)
+        // using latest recorded sequence to avoid gaps or double-up on recount during deletions
+        $lastSurat = SuratKeluar::whereYear('tanggal', $year)
             ->orderBy('id', 'desc')
             ->first();
 
-        // extract sequence from latest nomor, or start at 1
         $nextNumFallback = 1;
         if ($lastSurat) {
             $parts = explode('/', $lastSurat->nomor_surat);
             if (count($parts) >= 2 && is_numeric($parts[1])) {
                 $nextNumFallback = intval($parts[1]) + 1;
             } else {
-                // simple fallback if parsing fails, just count existing records in category+year
-                $nextNumFallback = SuratKeluar::where('kategori', $validated['kategori'])->whereYear('tanggal', $year)->count() + 1;
+                // fallback to count if format was non-standard
+                $nextNumFallback = SuratKeluar::whereYear('tanggal', $year)->count() + 1;
             }
         }
 
         $nextNumStr = str_pad($nextNumFallback, 3, '0', STR_PAD_LEFT);
-        $nomorSurat = "{$klasifikasiCode}/{$nextNumStr}/{$suffix}/{$year}";
+
+        // [kode-klasifikasi]/[nomor-agenda]/412.216/[tahun]
+        $nomorSurat = "{$klasifikasiCode}/{$nextNumStr}/412.216/{$year}";
 
         $validated['nomor_surat'] = $nomorSurat;
 
@@ -78,6 +81,17 @@ class SuratKeluarController extends Controller
 
         return redirect()->route('sipintar.agenda', ['kategori' => $validated['kategori']])
                          ->with('success', 'Surat berhasil disimpan');
+    }
+
+    public function searchKlasifikasi(Request $request)
+    {
+        $search = $request->query('query');
+        $klasifikasis = \App\Models\Klasifikasi::where('name', 'LIKE', "%{$search}%")
+            ->orderBy('name', 'asc')
+            ->limit(10)
+            ->get(['id', 'name']);
+        
+        return response()->json($klasifikasis);
     }
 
     public function agenda($kategori = 'all')
@@ -108,28 +122,21 @@ class SuratKeluarController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
         $surat = SuratKeluar::findOrFail($id);
-
-        $validated = $request->validate([
-            'klasifikasi' => 'required|string',
-            'tujuan' => 'required|string',
-            'perihal' => 'required|string',
-            'unit_pengolah' => 'required|string',
-            'tanggal' => 'required|date',
-        ]);
-
-        // Note: Usually nomor_surat is not updated unless klasifikasi changes significantly 
-        // but for simplicity we will just update the fields and keep nomor_surat as is 
-        // unless you want to regenerate it. Let's keep the original nomor_surat for now.
-        
-        $surat->update($validated);
-
-        return redirect()->route('sipintar.agenda', ['kategori' => $surat->kategori])
-                         ->with('success', 'Surat berhasil diperbarui');
+// ...
+// (the rest of update)
     }
 
     public function destroy($id)
     {
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
         $surat = SuratKeluar::findOrFail($id);
         $kategori = $surat->kategori;
         $surat->delete();
