@@ -114,6 +114,10 @@ class SuratKeluarController extends Controller
 
     public function edit($id)
     {
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
         $surat = SuratKeluar::findOrFail($id);
         return Inertia::render('Sipintar/Edit', [
             'surat' => $surat
@@ -127,8 +131,37 @@ class SuratKeluarController extends Controller
         }
 
         $surat = SuratKeluar::findOrFail($id);
-// ...
-// (the rest of update)
+
+        $validated = $request->validate([
+            'klasifikasi' => 'required|string',
+            'tujuan' => 'required|string',
+            'perihal' => 'required|string',
+            'unit_pengolah' => 'required|string',
+            'tanggal' => 'required|date',
+        ]);
+
+        $newDate = Carbon::parse($validated['tanggal']);
+        $year = $newDate->format('Y');
+
+        // Extract code from classification name like "000.1.1 Perjalanan Dinas"
+        $klasifikasiCode = '000'; // fallback
+        if (preg_match('/^([\d\.]+)/', $validated['klasifikasi'], $matches)) {
+            $klasifikasiCode = $matches[1];
+        }
+
+        // Reconstruct nomor surat based on updated klasifikasi or year change
+        // Keep the original sequence number (agenda number)
+        $parts = explode('/', $surat->nomor_surat);
+        $sequence = $parts[1] ?? '001';
+
+        // [kode-klasifikasi]/[nomor-agenda]/412.216/[tahun]
+        $nomorSurat = "{$klasifikasiCode}/{$sequence}/412.216/{$year}";
+        $validated['nomor_surat'] = $nomorSurat;
+
+        $surat->update($validated);
+
+        return redirect()->route('sipintar.agenda', ['kategori' => $surat->kategori])
+                         ->with('success', 'Surat berhasil diperbarui');
     }
 
     public function destroy($id)

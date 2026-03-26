@@ -36,7 +36,7 @@ export default function Login() {
 
                     <div className="mt-8">
                         <h2 className="text-[#1D4ED8] font-black text-center text-3xl mb-1">SIPINTAR</h2>
-                        <p className="text-slate-500 font-semibold text-center mb-8">Sistem Pencatatan Surat Keluar</p>
+                        <p className="text-slate-500 font-semibold text-center mb-8">Sistem Pencatatan Nomor Surat Keluar</p>
                         
                         <Form {...store.form()} resetOnSuccess={['password']} className="flex flex-col gap-4">
                             {({ processing, errors }) => (

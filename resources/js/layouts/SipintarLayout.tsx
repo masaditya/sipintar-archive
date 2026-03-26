@@ -102,7 +102,7 @@ export default function SipintarLayout({ children, title = "" }: { children: Rea
                 <aside className="sidebar-glass">
                     <div className="sidebar-header">
                         <h3 className="flex justify-center items-center"><i className="fas fa-paper-plane text-blue-600 mr-2"></i>SIPINTAR</h3>
-                        <small className="text-gray-500 font-bold block mt-1">Sistem Pencatatan Surat Keluar</small>
+                        <small className="text-gray-500 font-bold block mt-1">Sistem Pencatatan Nomor Surat Keluar</small>
                     </div>
                     
                     <div className="sidebar-menu">

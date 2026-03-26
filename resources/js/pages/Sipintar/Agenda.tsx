@@ -117,22 +117,24 @@ export default function Agenda({ kategori, surats }: AgendaProps) {
                                     </td>
 
                                     <td className="bg-white/70 group-hover:bg-white py-4 px-5 rounded-r-xl align-middle text-center">
-                                        <div className="flex justify-center items-center gap-2">
-                                            <Link 
-                                                href={`/surat/${surat.id}/edit`}
-                                                className="w-10 h-10 flex justify-center items-center bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-                                                title="Edit Surat"
-                                            >
-                                                <i className="fas fa-edit"></i>
-                                            </Link>
-                                            <button 
-                                                onClick={() => setSuratToDelete(surat)}
-                                                className="w-10 h-10 flex justify-center items-center bg-red-100 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all shadow-sm cursor-pointer"
-                                                title="Hapus Surat"
-                                            >
-                                                <i className="fas fa-trash"></i>
-                                            </button>
-                                        </div>
+                                        {(usePage().props.auth as any).user.role === 'admin' && (
+                                            <div className="flex justify-center items-center gap-2">
+                                                <Link 
+                                                    href={`/surat/${surat.id}/edit`}
+                                                    className="w-10 h-10 flex justify-center items-center bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                                    title="Edit Surat"
+                                                >
+                                                    <i className="fas fa-edit"></i>
+                                                </Link>
+                                                <button 
+                                                    onClick={() => setSuratToDelete(surat)}
+                                                    className="w-10 h-10 flex justify-center items-center bg-red-100 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all shadow-sm cursor-pointer"
+                                                    title="Hapus Surat"
+                                                >
+                                                    <i className="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        )}
                                     </td>
                                 </tr>
                             ))}
