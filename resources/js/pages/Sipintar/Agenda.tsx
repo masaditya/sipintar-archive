@@ -90,14 +90,14 @@ export default function Agenda({ kategori, surats }: AgendaProps) {
                                     <td className="bg-white/70 group-hover:bg-white py-4 px-5 font-semibold text-slate-700 align-middle">
                                         {surat.tanggal.split('-').reverse().join('-')}
                                     </td>
-                                    <td className="bg-white/70 group-hover:bg-white py-4 px-5 font-bold text-blue-600 align-middle whitespace-nowrap">{surat.nomor_surat}</td>
-                                    <td className="bg-white/70 group-hover:bg-white py-4 px-5 align-middle">
-                                        <span className="bg-blue-100 text-blue-600 border border-blue-400 rounded-full px-3 py-1 text-sm font-bold whitespace-nowrap">
+                                    <td className="bg-white/70 group-hover:bg-white py-4 px-5 font-bold text-blue-600 align-middle max-w-[180px] wrap-break-word line-clamp-2">{surat.nomor_surat}</td>
+                                    <td className="bg-white/70 group-hover:bg-white py-4 px-5 align-middle max-w-[250px]">
+                                        <span className="inline-block bg-blue-100 text-blue-600 border border-blue-400 rounded-full px-3 py-1 text-sm font-bold line-clamp-2">
                                             {surat.klasifikasi}
                                         </span>
                                     </td>
-                                    <td className="bg-white/70 group-hover:bg-white py-4 px-5 font-bold text-slate-800 align-middle">{surat.tujuan}</td>
-                                    <td className="bg-white/70 group-hover:bg-white py-4 px-5 text-slate-600 font-semibold align-middle">{surat.perihal}</td>
+                                    <td className="bg-white/70 group-hover:bg-white py-4 px-5 font-bold text-slate-800 align-middle max-w-[200px] line-clamp-2 wrap-break-word">{surat.tujuan}</td>
+                                    <td className="bg-white/70 group-hover:bg-white py-4 px-5 text-slate-600 font-semibold align-middle max-w-[250px] line-clamp-2 wrap-break-word">{surat.perihal}</td>
                                     
                                     {showKategori && (
                                         <td className="bg-white/70 group-hover:bg-white py-4 px-5 align-middle">
@@ -110,8 +110,8 @@ export default function Agenda({ kategori, surats }: AgendaProps) {
                                         </td>
                                     )}
                                     
-                                    <td className="bg-white/70 group-hover:bg-white py-4 px-5 align-middle">
-                                        <span className="bg-slate-500 text-white rounded-full px-3 py-1 text-sm font-bold whitespace-nowrap">
+                                    <td className="bg-white/70 group-hover:bg-white py-4 px-5 align-middle max-w-[150px]">
+                                        <span className="inline-block bg-slate-500 text-white rounded-full px-3 py-1 text-sm font-bold line-clamp-2">
                                             {surat.unit_pengolah}
                                         </span>
                                     </td>
