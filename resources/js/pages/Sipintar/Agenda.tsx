@@ -16,9 +16,11 @@ interface Surat {
 interface AgendaProps {
     kategori: string;
     surats: Surat[];
+    selectedYear: number;
+    availableYears: number[];
 }
 
-export default function Agenda({ kategori, surats }: AgendaProps) {
+export default function Agenda({ kategori, surats, selectedYear, availableYears }: AgendaProps) {
     const [search, setSearch] = useState('');
     const [suratToDelete, setSuratToDelete] = useState<Surat | null>(null);
     
@@ -62,11 +64,24 @@ export default function Agenda({ kategori, surats }: AgendaProps) {
                                 className="w-full bg-transparent border-none outline-none font-semibold text-slate-700 px-3 focus:ring-0" 
                             />
                         </div>
-                        <button className="bg-white text-blue-600 font-bold border-2 border-blue-600 rounded-xl px-6 py-2 shadow-sm hover:bg-blue-50 transition-colors whitespace-nowrap">
-                            <i className="fas fa-print mr-2"></i>Cetak Laporan
-                        </button>
+                            <select 
+                                value={selectedYear}
+                                onChange={(e) => router.get(`/surat/agenda/${kategori}`, { year: e.target.value }, { preserveState: true })}
+                                className="bg-white text-blue-700 font-bold border-2 border-blue-200 rounded-xl px-4 py-2 shadow-sm hover:border-blue-400 focus:ring-0 outline-none transition-all cursor-pointer mr-2"
+                            >
+                                {availableYears.map(year => (
+                                    <option key={year} value={year}>Tahun {year}</option>
+                                ))}
+                            </select>
+
+                            <button 
+                                onClick={() => window.location.href = `/surat/export/${kategori}?year=${selectedYear}`}
+                                className="bg-white text-blue-600 font-bold border-2 border-blue-600 rounded-xl px-6 py-2 shadow-sm hover:bg-blue-50 transition-colors whitespace-nowrap"
+                            >
+                                <i className="fas fa-print mr-2"></i>Cetak Laporan
+                            </button>
+                        </div>
                     </div>
-                </div>
 
                 <div className="overflow-x-auto">
                     <table className="w-full border-separate" style={{ borderSpacing: '0 10px' }}>
@@ -169,7 +184,7 @@ export default function Agenda({ kategori, surats }: AgendaProps) {
                             </div>
                             <h3 className="text-2xl font-black text-slate-800 mb-2">Hapus Surat?</h3>
                             <p className="text-slate-500 font-semibold mb-6">
-                                Anda yakin ingin menghapus surat dengan nomor <span className="text-blue-600 font-bold">{suratToDelete.nomor_surat}</span>? Tindakan ini tidak dapat dibatalkan.
+                                Anda yakin ingin menghapus surat dengan nomor <span className="text-blue-600 font-bold">{suratToDelete?.nomor_surat}</span>? Tindakan ini tidak dapat dibatalkan.
                             </p>
                             
                             <div className="flex gap-3 justify-center">
@@ -182,9 +197,11 @@ export default function Agenda({ kategori, surats }: AgendaProps) {
                                 <button 
                                     className="px-6 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-200 hover:bg-red-700 transition-colors"
                                     onClick={() => {
-                                        router.delete(`/surat/${suratToDelete.id}`, {
-                                            onSuccess: () => setSuratToDelete(null)
-                                        });
+                                        if (suratToDelete) {
+                                            router.delete(`/surat/${suratToDelete.id}`, {
+                                                onSuccess: () => setSuratToDelete(null)
+                                            });
+                                        }
                                     }}
                                 >
                                     Ya, Hapus Sekarang

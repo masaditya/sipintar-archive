@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import SipintarLayout from '@/layouts/SipintarLayout';
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
@@ -25,6 +25,9 @@ interface EditProps {
 export default function Edit({ surat }: EditProps) {
     const titleStr = surat.kategori === 'umum' ? 'Umum' : surat.kategori === 'pengadaan' ? 'Pengadaan' : 'SK Kadin';
     
+    const user = usePage().props.auth as any;
+    const isUserAdmin = user.user.role === 'admin';
+
     const { data, setData, patch, processing, errors } = useForm({
         klasifikasi: surat.klasifikasi,
         tujuan: surat.tujuan,
@@ -272,15 +275,22 @@ export default function Edit({ surat }: EditProps) {
 
                             <div className="mb-4">
                                 <label className="block text-sm font-bold text-slate-700 ml-2 mb-1">Unit Pengolah</label>
-                                <div className="flex items-center bg-white rounded-xl border border-slate-200 shadow-inner overflow-hidden">
+                                <div className={`flex items-center rounded-xl border border-slate-200 shadow-inner overflow-hidden ${!isUserAdmin ? 'bg-slate-100' : 'bg-white'}`}>
                                     <i className="fas fa-building text-blue-500 p-4"></i>
-                                    <select required value={data.unit_pengolah} onChange={e => setData('unit_pengolah', e.target.value)} className="w-full bg-transparent border-none outline-none font-bold text-slate-700 focus:ring-0 p-4 pl-0">
+                                    <select 
+                                        required 
+                                        value={data.unit_pengolah} 
+                                        onChange={e => setData('unit_pengolah', e.target.value)} 
+                                        disabled={!isUserAdmin}
+                                        className={`w-full bg-transparent border-none outline-none font-bold text-slate-700 focus:ring-0 p-4 pl-0 ${!isUserAdmin ? 'cursor-not-allowed' : ''}`}
+                                    >
                                         <option value="" disabled>Pilih unit pengolah...</option>
                                         <option value="Sekretariat">Sekretariat</option>
                                         <option value="Bidang Perpustakaan">Bidang Perpustakaan</option>
                                         <option value="Bidang Kearsipan">Bidang Kearsipan</option>
                                     </select>
                                 </div>
+                                {!isUserAdmin && <p className="text-xs text-slate-400 mt-1 ml-2">* Unit pengolah dikunci sesuai akun Anda</p>}
                                 {errors.unit_pengolah && <span className="text-red-500 text-sm">{errors.unit_pengolah}</span>}
                             </div>
 
@@ -310,6 +320,7 @@ export default function Edit({ surat }: EditProps) {
                                                     setData('tanggal', `${year}-${month}-${day}`);
                                                 }
                                             }}
+                                            disabled={(date) => date > new Date()}
                                             initialFocus
                                         />
                                     </PopoverContent>

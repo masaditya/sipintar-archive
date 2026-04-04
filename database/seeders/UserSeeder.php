@@ -14,18 +14,40 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
+        // Global Admin
         User::create([
-            'name' => 'Administrator',
+            'name' => 'Administrator Global',
             'username' => 'admin',
             'password' => Hash::make('password'),
             'role' => 'admin',
+            'unit_pengolah' => null, // Access to all
         ]);
         
+        // Unit Sekretariat
         User::create([
-            'name' => 'User Biasa',
-            'username' => 'user',
+            'name' => 'Admin Sekretariat',
+            'username' => 'sekretariat',
             'password' => Hash::make('password'),
             'role' => 'user',
+            'unit_pengolah' => 'Sekretariat',
+        ]);
+
+        // Unit Perpustakaan
+        User::create([
+            'name' => 'Admin Perpustakaan',
+            'username' => 'perpustakaan',
+            'password' => Hash::make('password'),
+            'role' => 'user',
+            'unit_pengolah' => 'Bidang Perpustakaan',
+        ]);
+
+        // Unit Kearsipan
+        User::create([
+            'name' => 'Admin Kearsipan',
+            'username' => 'kearsipan',
+            'password' => Hash::make('password'),
+            'role' => 'user',
+            'unit_pengolah' => 'Bidang Kearsipan',
         ]);
     }
 }
