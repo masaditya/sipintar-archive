@@ -13,7 +13,7 @@ interface CreateProps {
 
 export default function Create({ kategori }: CreateProps) {
     const titleStr = kategori === 'umum' ? 'Umum' : kategori === 'pengadaan' ? 'Pengadaan' : 'SK Kadin';
-    
+
     const user = usePage().props.auth as any;
     const isUserAdmin = user.user.role === 'admin';
 
@@ -69,7 +69,7 @@ export default function Create({ kategori }: CreateProps) {
         setIsFetchingAgenda(true);
         try {
             const response = await axios.get('/surat/next-agenda', {
-                params: { 
+                params: {
                     tanggal: data.tanggal,
                     klasifikasi: data.klasifikasi
                 }
@@ -125,8 +125,8 @@ export default function Create({ kategori }: CreateProps) {
         "Kelurahan / Desa se-Kabupaten Bojonegoro"
     ];
 
-    const filteredTujuan = data.tujuan === '' 
-        ? tujuanOptions 
+    const filteredTujuan = data.tujuan === ''
+        ? tujuanOptions
         : tujuanOptions.filter(opt => opt.toLowerCase().includes(data.tujuan.toLowerCase()));
 
     const handlePreSubmit = (e: React.FormEvent) => {
@@ -142,14 +142,14 @@ export default function Create({ kategori }: CreateProps) {
 
     return (
         <SipintarLayout title={`Pengajuan Surat ${titleStr}`}>
-            
+
             {/* Modal Konfirmasi */}
             {showModal && (
                 <div className="fixed top-0 left-0 w-screen h-screen bg-black/50 backdrop-blur-sm flex justify-center items-center z-50">
                     <div className="bg-white/90 backdrop-blur-md p-8 rounded-2xl w-[90%] max-w-[500px] shadow-[0_20px_40px_rgba(0,0,0,0.3)] text-left border-2 border-white/50">
                         <h4 className="font-bold mb-3 text-blue-600 text-xl"><i className="fas fa-question-circle mr-2"></i>Konfirmasi Pengajuan</h4>
                         <p className="text-slate-500 font-semibold mb-6">Apakah Anda sudah yakin dengan detail isi, klasifikasi, perihal, tujuan surat, dan unit pengolah berikut?</p>
-                        
+
                         <div className="mb-6 space-y-2">
                             <div className="flex border-b border-dashed border-slate-300 pb-2"><div className="w-[130px] font-bold text-slate-500">Kode Klasifikasi</div><div className="flex-1 font-black text-slate-800">{data.klasifikasi}</div></div>
                             <div className="flex border-b border-dashed border-slate-300 pb-2"><div className="w-[130px] font-bold text-slate-500">Tujuan Surat</div><div className="flex-1 font-black text-slate-800">{data.tujuan}</div></div>
@@ -184,26 +184,26 @@ export default function Create({ kategori }: CreateProps) {
                     <div className="mt-8">
                         <h3 className="text-blue-700 font-extrabold text-center text-2xl mb-1">Pengajuan Surat {titleStr}</h3>
                         <p className="text-slate-500 font-semibold text-center mb-8">Lengkapi detail surat untuk disimpan ke database</p>
-                        
+
                         <form onSubmit={handlePreSubmit}>
                             <div className="mb-4 relative">
                                 <label className="block text-sm font-bold text-slate-700 ml-2 mb-1">Kode Klasifikasi</label>
                                 <div className="flex items-center bg-white rounded-xl border border-slate-200 shadow-inner overflow-hidden relative z-20">
                                     <i className="fas fa-folder text-blue-500 p-4"></i>
-                                    <input 
-                                        type="text" 
-                                        required 
-                                        value={data.klasifikasi} 
+                                    <input
+                                        type="text"
+                                        required
+                                        value={data.klasifikasi}
                                         onChange={e => {
                                             setData('klasifikasi', e.target.value);
                                             setShowKlasifikasiDropdown(true);
-                                        }} 
+                                        }}
                                         onFocus={() => setShowKlasifikasiDropdown(true)}
                                         onBlur={() => setTimeout(() => setShowKlasifikasiDropdown(false), 200)}
-                                        placeholder="Ketik atau pilih kode klasifikasi..." 
-                                        className="w-full bg-transparent border-none outline-none font-bold text-slate-700 focus:ring-0 p-4 pl-0" 
+                                        placeholder="Ketik atau pilih kode klasifikasi..."
+                                        className="w-full bg-transparent border-none outline-none font-bold text-slate-700 focus:ring-0 p-4 pl-0"
                                     />
-                                    <div 
+                                    <div
                                         className="pr-4 text-slate-400 hover:text-blue-500 cursor-pointer flex items-center h-full"
                                         onClick={() => setShowKlasifikasiDropdown(!showKlasifikasiDropdown)}
                                     >
@@ -213,8 +213,8 @@ export default function Create({ kategori }: CreateProps) {
                                 {showKlasifikasiDropdown && filteredKlasifikasi.length > 0 && (
                                     <div className="absolute z-30 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.1)] max-h-56 overflow-y-auto overflow-x-hidden">
                                         {filteredKlasifikasi.map((opt, idx) => (
-                                            <div 
-                                                key={idx} 
+                                            <div
+                                                key={idx}
                                                 className="px-5 py-3 hover:bg-blue-50 cursor-pointer text-slate-700 font-bold border-b border-slate-100 last:border-none transition-colors duration-150"
                                                 onClick={() => {
                                                     setData('klasifikasi', opt.name);
@@ -238,20 +238,20 @@ export default function Create({ kategori }: CreateProps) {
                                 <label className="block text-sm font-bold text-slate-700 ml-2 mb-1">Tujuan Surat</label>
                                 <div className="flex items-center bg-white rounded-xl border border-slate-200 shadow-inner overflow-hidden relative z-20">
                                     <i className="fas fa-user-tie text-blue-500 p-4"></i>
-                                    <input 
-                                        type="text" 
-                                        required 
-                                        value={data.tujuan} 
+                                    <input
+                                        type="text"
+                                        required
+                                        value={data.tujuan}
                                         onChange={e => {
                                             setData('tujuan', e.target.value);
                                             setShowTujuanDropdown(true);
-                                        }} 
+                                        }}
                                         onFocus={() => setShowTujuanDropdown(true)}
                                         onBlur={() => setTimeout(() => setShowTujuanDropdown(false), 200)}
-                                        placeholder="Masukkan instansi/tujuan surat..." 
-                                        className="w-full bg-transparent border-none outline-none font-bold text-slate-700 focus:ring-0 p-4 pl-0" 
+                                        placeholder="Masukkan instansi/tujuan surat..."
+                                        className="w-full bg-transparent border-none outline-none font-bold text-slate-700 focus:ring-0 p-4 pl-0"
                                     />
-                                    <div 
+                                    <div
                                         className="pr-4 text-slate-400 hover:text-blue-500 cursor-pointer flex items-center h-full"
                                         onClick={() => setShowTujuanDropdown(!showTujuanDropdown)}
                                     >
@@ -261,8 +261,8 @@ export default function Create({ kategori }: CreateProps) {
                                 {showTujuanDropdown && filteredTujuan.length > 0 && (
                                     <div className="absolute z-30 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.1)] max-h-56 overflow-y-auto overflow-x-hidden">
                                         {filteredTujuan.map((opt, idx) => (
-                                            <div 
-                                                key={idx} 
+                                            <div
+                                                key={idx}
                                                 className="px-5 py-3 hover:bg-blue-50 cursor-pointer text-slate-700 font-bold border-b border-slate-100 last:border-none transition-colors duration-150"
                                                 onClick={() => {
                                                     setData('tujuan', opt);
@@ -290,10 +290,10 @@ export default function Create({ kategori }: CreateProps) {
                                 <label className="block text-sm font-bold text-slate-700 ml-2 mb-1">Unit Pengolah</label>
                                 <div className={`flex items-center rounded-xl border border-slate-200 shadow-inner overflow-hidden ${!isUserAdmin ? 'bg-slate-100' : 'bg-white'}`}>
                                     <i className="fas fa-building text-blue-500 p-4"></i>
-                                    <select 
-                                        required 
-                                        value={data.unit_pengolah} 
-                                        onChange={e => setData('unit_pengolah', e.target.value)} 
+                                    <select
+                                        required
+                                        value={data.unit_pengolah}
+                                        onChange={e => setData('unit_pengolah', e.target.value)}
                                         disabled={!isUserAdmin}
                                         className={`w-full bg-transparent border-none outline-none font-bold text-slate-700 focus:ring-0 p-4 pl-0 ${!isUserAdmin ? 'cursor-not-allowed' : ''}`}
                                     >
@@ -312,15 +312,15 @@ export default function Create({ kategori }: CreateProps) {
                                 <div className="flex gap-2">
                                     <div className="flex-1 flex items-center bg-white rounded-xl border border-slate-200 shadow-inner overflow-hidden">
                                         <i className="fas fa-hashtag text-blue-500 p-4"></i>
-                                        <input 
-                                            type="text" 
-                                            value={data.nomor_surat} 
-                                            onChange={e => setData('nomor_surat', e.target.value)} 
-                                            placeholder="Klik tombol di sebelah atau isi manual..." 
-                                            className="w-full bg-transparent border-none outline-none font-bold text-slate-700 focus:ring-0 p-4 pl-0" 
+                                        <input
+                                            type="text"
+                                            value={data.nomor_surat}
+                                            onChange={e => setData('nomor_surat', e.target.value)}
+                                            placeholder="Klik tombol di sebelah atau isi manual..."
+                                            className="w-full bg-transparent border-none outline-none font-bold text-slate-700 focus:ring-0 p-4 pl-0"
                                         />
                                     </div>
-                                    <button 
+                                    <button
                                         type="button"
                                         onClick={fetchAgendaNumber}
                                         disabled={isFetchingAgenda}
@@ -359,14 +359,14 @@ export default function Create({ kategori }: CreateProps) {
                                                     setData('tanggal', `${year}-${month}-${day}`);
                                                 }
                                             }}
-                                            // disabled={(date) => date > new Date()}
+                                            disabled={(date) => date > new Date()}
                                             initialFocus
                                         />
                                     </PopoverContent>
                                 </Popover>
                                 {errors.tanggal && <span className="text-red-500 text-sm">{errors.tanggal}</span>}
                             </div>
-                            
+
                             <div className="flex gap-3 pt-4 border-t border-slate-200">
                                 <button type="submit" className="w-full cursor-pointer bg-linear-to-br from-blue-500 to-blue-700 text-white font-extrabold text-lg py-4 rounded-xl shadow-[0_4px_15px_rgba(29,78,216,0.4)] hover:shadow-[0_6px_20px_rgba(29,78,216,0.6)] hover:-translate-y-1 transition-all">
                                     Simpan Surat <i className="fas fa-check-circle ml-2"></i>
