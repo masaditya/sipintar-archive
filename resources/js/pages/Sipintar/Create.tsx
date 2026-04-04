@@ -71,7 +71,8 @@ export default function Create({ kategori }: CreateProps) {
             const response = await axios.get('/surat/next-agenda', {
                 params: {
                     tanggal: data.tanggal,
-                    klasifikasi: data.klasifikasi
+                    klasifikasi: data.klasifikasi,
+                    kategori: data.kategori
                 }
             });
             setData('nomor_surat', response.data.nomor_surat);

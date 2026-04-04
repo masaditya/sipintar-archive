@@ -63,7 +63,7 @@ class SuratKeluarController extends Controller
             }
 
             // Generate nomor agenda (sequence for the current year)
-            $nextNumFallback = $this->calculateNextAgendaNumber($validated['tanggal']);
+            $nextNumFallback = $this->calculateNextAgendaNumber($validated['tanggal'], $validated['kategori']);
 
             // [kode-klasifikasi]/[nomor-agenda]/412.216/[tahun]
             $nomorSurat = "{$klasifikasiCode}/{$nextNumFallback}/412.216/{$year}";
@@ -81,10 +81,12 @@ class SuratKeluarController extends Controller
         $request->validate([
             'tanggal' => 'required|date',
             'klasifikasi' => 'required|string',
+            'kategori' => 'required|in:umum,pengadaan,sk',
         ]);
 
         $tanggal = $request->query('tanggal');
         $klasifikasi = $request->query('klasifikasi');
+        $kategori = $request->query('kategori');
         $year = Carbon::parse($tanggal)->format('Y');
 
         // Extract code from classification name
@@ -93,7 +95,7 @@ class SuratKeluarController extends Controller
             $klasifikasiCode = $matches[1];
         }
 
-        $nextNum = $this->calculateNextAgendaNumber($tanggal);
+        $nextNum = $this->calculateNextAgendaNumber($tanggal, $kategori);
 
         $nomorSurat = "{$klasifikasiCode}/{$nextNum}/412.216/{$year}";
 
@@ -103,7 +105,7 @@ class SuratKeluarController extends Controller
         ]);
     }
 
-    private function calculateNextAgendaNumber($tanggal)
+    private function calculateNextAgendaNumber($tanggal, $kategori)
     {
         $dateObj = Carbon::parse($tanggal);
         $year = $dateObj->format('Y');
@@ -111,6 +113,7 @@ class SuratKeluarController extends Controller
         // 1. Check if there are already records for this specific date
         $lastSuratSameDay = SuratKeluar::whereYear('tanggal', $year)
             ->whereDate('tanggal', $dateObj->toDateString())
+            ->where('kategori', $kategori)
             ->get()
             ->sortByDesc(fn($s) => $this->extractSequence($s))
             ->first();
@@ -122,6 +125,7 @@ class SuratKeluarController extends Controller
         // 2. If no records for this date, find the maximum sequence on any date BEFORE this one
         $lastSuratBefore = SuratKeluar::whereYear('tanggal', $year)
             ->whereDate('tanggal', '<', $dateObj->toDateString())
+            ->where('kategori', $kategori)
             ->get()
             ->sortByDesc(fn($s) => $this->extractSequence($s))
             ->first();
@@ -130,6 +134,7 @@ class SuratKeluarController extends Controller
         // This handles the case where you select an earlier date but something later is already recorded
         if (!$lastSuratBefore) {
             $lastSuratGlobal = SuratKeluar::whereYear('tanggal', $year)
+                ->where('kategori', $kategori)
                 ->get()
                 ->sortByDesc(fn($s) => $this->extractSequence($s))
                 ->first();
