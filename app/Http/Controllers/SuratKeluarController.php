@@ -150,11 +150,14 @@ class SuratKeluarController extends Controller
         $lastNum = $this->extractSequence($lastSuratBefore);
         $isWeekday = $dateObj->isWeekday();
 
-        if ($isWeekday) {
-            return $lastNum + 2;
-        } else {
-            return $lastNum + 1;
-        }
+        // if ($isWeekday) {
+        //     return $lastNum + 2;
+        // } else {
+        //     return $lastNum + 1;
+        // }
+
+        // kalo mau 
+        return $lastNum + 1;
     }
 
     private function extractSequence($surat)
