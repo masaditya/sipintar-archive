@@ -110,6 +110,8 @@ class SuratKeluarController extends Controller
         $dateObj = Carbon::parse($tanggal);
         $year = $dateObj->format('Y');
 
+        $nextNum = 1;
+
         // 1. Check if there are already records for this specific date
         $lastSuratSameDay = SuratKeluar::whereYear('tanggal', $year)
             ->whereDate('tanggal', $dateObj->toDateString())
@@ -119,45 +121,51 @@ class SuratKeluarController extends Controller
             ->first();
 
         if ($lastSuratSameDay) {
-            return $this->extractSequence($lastSuratSameDay) + 1;
-        }
-
-        // 2. If no records for this date, find the maximum sequence on any date BEFORE this one
-        $lastSuratBefore = SuratKeluar::whereYear('tanggal', $year)
-            ->whereDate('tanggal', '<', $dateObj->toDateString())
-            ->where('kategori', $kategori)
-            ->get()
-            ->sortByDesc(fn($s) => $this->extractSequence($s))
-            ->first();
-
-        // 3. If there are also no records before this date, find the maximum sequence OVERALL for the year
-        // This handles the case where you select an earlier date but something later is already recorded
-        if (!$lastSuratBefore) {
-            $lastSuratGlobal = SuratKeluar::whereYear('tanggal', $year)
+            $nextNum = $this->extractSequence($lastSuratSameDay) + 1;
+        } else {
+            // 2. If no records for this date, find the maximum sequence on any date BEFORE this one
+            $lastSuratBefore = SuratKeluar::whereYear('tanggal', $year)
+                ->whereDate('tanggal', '<', $dateObj->toDateString())
                 ->where('kategori', $kategori)
                 ->get()
                 ->sortByDesc(fn($s) => $this->extractSequence($s))
                 ->first();
-            
-            if (!$lastSuratGlobal) {
-                return 1;
+
+            // 3. If there are also no records before this date, find the maximum sequence OVERALL for the year
+            // This handles the case where you select an earlier date but something later is already recorded
+            if (!$lastSuratBefore) {
+                $lastSuratGlobal = SuratKeluar::whereYear('tanggal', $year)
+                    ->where('kategori', $kategori)
+                    ->get()
+                    ->sortByDesc(fn($s) => $this->extractSequence($s))
+                    ->first();
+                
+                if ($lastSuratGlobal) {
+                    $lastSuratBefore = $lastSuratGlobal;
+                }
             }
-            
-            // If selecting a date before the global max, it still behaves like a "before" record for consistency
-            $lastSuratBefore = $lastSuratGlobal;
+
+            if ($lastSuratBefore) {
+                $lastNum = $this->extractSequence($lastSuratBefore);
+                // Lompatan nomor kosong hanya untuk kategori umum pada hari kerja
+                if ($kategori === 'umum' && $dateObj->isWeekday()) {
+                    $nextNum = $lastNum + 2;
+                } else {
+                    $nextNum = $lastNum + 1;
+                }
+            } else {
+                $nextNum = 1;
+            }
         }
 
-        $lastNum = $this->extractSequence($lastSuratBefore);
-        $isWeekday = $dateObj->isWeekday();
+        // Apply minimum starting numbers based on kategori
+        if ($kategori === 'sk' && $nextNum < 16) {
+            return 16;
+        } elseif ($kategori === 'pengadaan' && $nextNum < 103) {
+            return 103;
+        }
 
-        // if ($isWeekday) {
-        //     return $lastNum + 2;
-        // } else {
-        //     return $lastNum + 1;
-        // }
-
-        // kalo mau 
-        return $lastNum + 1;
+        return $nextNum;
     }
 
     private function extractSequence($surat)
