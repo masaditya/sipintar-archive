@@ -249,7 +249,16 @@ export default function Agenda({ kategori, surats, selectedYear, availableYears 
                                             </div>
                                         )}
                                         {surat.isEmpty && (
-                                            <span className="text-slate-300 text-xs font-bold uppercase tracking-wider">Tersedia</span>
+                                            <div className="flex justify-center items-center gap-2">
+                                                <Link 
+                                                    href={`/surat/create/${kategori}?sequence=${surat.sequence}&tanggal=${surat.tanggal}`}
+                                                    className="w-10 h-10 flex justify-center items-center bg-teal-100 text-teal-600 rounded-lg hover:bg-teal-600 hover:text-white transition-all shadow-sm"
+                                                    title="Gunakan Nomor Ini"
+                                                >
+                                                    <i className="fas fa-plus"></i>
+                                                </Link>
+                                                <span className="text-slate-300 text-xs font-bold uppercase tracking-wider ml-1">Tersedia</span>
+                                            </div>
                                         )}
                                     </td>
                                 </tr>

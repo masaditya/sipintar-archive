@@ -24,13 +24,15 @@ class SuratKeluarController extends Controller
         ]);
     }
 
-    public function create($kategori)
+    public function create(Request $request, $kategori)
     {
         if (!in_array($kategori, ['umum', 'pengadaan', 'sk'])) {
             abort(404);
         }
         return Inertia::render('Sipintar/Create', [
-            'kategori' => $kategori
+            'kategori' => $kategori,
+            'sequence' => $request->query('sequence'),
+            'prefilledTanggal' => $request->query('tanggal'),
         ]);
     }
 

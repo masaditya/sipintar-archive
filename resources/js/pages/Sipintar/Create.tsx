@@ -9,9 +9,11 @@ import { id } from 'date-fns/locale';
 
 interface CreateProps {
     kategori: 'umum' | 'pengadaan' | 'sk';
+    sequence?: string;
+    prefilledTanggal?: string;
 }
 
-export default function Create({ kategori }: CreateProps) {
+export default function Create({ kategori, sequence, prefilledTanggal }: CreateProps) {
     const titleStr = kategori === 'umum' ? 'Umum' : kategori === 'pengadaan' ? 'Pengadaan' : 'SK Kadin';
 
     const user = usePage().props.auth as any;
@@ -23,7 +25,7 @@ export default function Create({ kategori }: CreateProps) {
         tujuan: '',
         perihal: '',
         unit_pengolah: isUserAdmin ? '' : (user.user.unit_pengolah || ''),
-        tanggal: new Date().toISOString().split('T')[0],
+        tanggal: prefilledTanggal || new Date().toISOString().split('T')[0],
         nomor_surat: '',
     });
 
@@ -45,6 +47,15 @@ export default function Create({ kategori }: CreateProps) {
 
         return () => clearTimeout(timer);
     }, [data.klasifikasi]);
+
+    // Auto-generate nomor_surat if sequence is provided
+    useEffect(() => {
+        if (sequence && data.klasifikasi) {
+            const klCode = data.klasifikasi.match(/^([\d\.]+)/)?.[1] || '000';
+            const year = new Date(data.tanggal).getFullYear();
+            setData('nomor_surat', `${klCode}/${sequence}/412.216/${year}`);
+        }
+    }, [data.klasifikasi, data.tanggal, sequence]);
 
     const fetchKlasifikasi = async (query: string) => {
         setIsLoadingKlasifikasi(true);
