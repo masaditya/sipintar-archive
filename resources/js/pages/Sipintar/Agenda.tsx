@@ -15,7 +15,7 @@ interface Surat {
 
 interface AgendaProps {
     kategori: string;
-    surats: Surat[];
+    surats: Surat[]; 
     selectedYear: number;
     availableYears: number[];
 }
@@ -24,6 +24,9 @@ export default function Agenda({ kategori, surats, selectedYear, availableYears 
     const [search, setSearch] = useState('');
     const [suratToDelete, setSuratToDelete] = useState<Surat | null>(null);
     const [showEmptyNumbers, setShowEmptyNumbers] = useState(false);
+    const [showManualMenu, setShowManualMenu] = useState(false);
+    const [manualSeq, setManualSeq] = useState('');
+    const [manualDate, setManualDate] = useState('');
     
     let title = "BUKU AGENDA GLOBAL";
     let showKategori = true;
@@ -42,6 +45,29 @@ export default function Agenda({ kategori, surats, selectedYear, availableYears 
         return 0;
     };
 
+    // Helper to calculate distributed date for empty numbers (e.g. Skenario B)
+    const getInterpolatedDate = (prevDateStr: string, currDateStr: string, gapOffset: number, totalGaps: number) => {
+        if (!prevDateStr || !currDateStr) return prevDateStr;
+        const prevTime = new Date(prevDateStr).getTime();
+        const currTime = new Date(currDateStr).getTime();
+        
+        if (isNaN(prevTime) || isNaN(currTime) || prevTime >= currTime) {
+            return prevDateStr;
+        }
+
+        const timeDiff = currTime - prevTime;
+        const fraction = gapOffset / (totalGaps + 1);
+        
+        // Round to nearest whole day (86400000 ms)
+        const interpolatedTime = prevTime + Math.round((timeDiff * fraction) / 86400000) * 86400000;
+        
+        const dateObj = new Date(interpolatedTime);
+        const yyyy = dateObj.getUTCFullYear();
+        const mm = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+        const dd = String(dateObj.getUTCDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    };
+
     const displayedSurats = useMemo(() => {
         // 1. Sort by sequence number ascending to find gaps reliably
         let sorted = [...surats].sort((a, b) => getSequence(a.nomor_surat) - getSequence(b.nomor_surat));
@@ -55,11 +81,21 @@ export default function Agenda({ kategori, surats, selectedYear, availableYears 
                 
                 if (i > 0) {
                     const prevSeq = getSequence(sorted[i-1].nomor_surat);
+                    const totalGaps = currentSeq - prevSeq - 1;
+                    
+                    let gapOffset = 1;
                     for (let gap = prevSeq + 1; gap < currentSeq; gap++) {
+                        const interpolatedTanggal = getInterpolatedDate(
+                            sorted[i-1].tanggal, 
+                            current.tanggal, 
+                            gapOffset, 
+                            totalGaps
+                        );
+                        
                         result.push({
                             id: -gap, // Use negative number for unique key and type compatibility
                             nomor_surat: `RESERVED / ${gap} / --- / ---`,
-                            tanggal: sorted[i-1].tanggal, 
+                            tanggal: interpolatedTanggal, 
                             perihal: 'NOMOR AGENDA KOSONG (UNTUK BACKDATE)',
                             klasifikasi: '---',
                             tujuan: '---',
@@ -67,6 +103,7 @@ export default function Agenda({ kategori, surats, selectedYear, availableYears 
                             isEmpty: true,
                             sequence: gap
                         });
+                        gapOffset++;
                     }
                 }
                 result.push(current);
@@ -146,6 +183,14 @@ export default function Agenda({ kategori, surats, selectedYear, availableYears 
                                 <span className={`text-[13px] font-black transition-colors uppercase tracking-tight ${showEmptyNumbers ? 'text-blue-700' : 'text-slate-500'}`}>Tampilkan Kosong</span>
                             </div>
 
+                            <button
+                                onClick={() => setShowManualMenu(true)}
+                                className="flex items-center justify-center w-[42px] h-[42px] rounded-xl bg-slate-50 border border-slate-200 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all shadow-sm group relative"
+                                title="Tambahkan Nomor Kosong Manual"
+                            >
+                                <i className="fas fa-plus text-sm group-hover:scale-110 transition-transform"></i>
+                            </button>
+
                             <div className="flex items-center bg-white rounded-xl border border-slate-200 shadow-inner px-4 p-2 w-full sm:w-[350px]">
                                 <i className="fas fa-search text-slate-400"></i>
                                 <input 
@@ -188,7 +233,7 @@ export default function Agenda({ kategori, surats, selectedYear, availableYears 
                                 <th className="border-none font-extrabold text-blue-700 py-3 px-5 text-left uppercase text-xs">Isi / Perihal</th>
                                 {/* {showKategori && <th className="border-none font-extrabold text-blue-700 py-3 px-5 text-left uppercase text-xs">Jenis Pengajuan</th>} */}
                                 <th className="border-none font-extrabold text-blue-700 py-3 px-5 text-left uppercase text-xs">Unit Pengolah</th>
-                                <th className="border-none font-extrabold text-blue-700 py-3 px-5 text-center uppercase text-xs">Aksi</th>
+                                <th className="border-none font-extrabold text-blue-700 py-3 px-5 text-center uppercase text-xs sticky right-0 bg-white/95 backdrop-blur-sm z-10 shadow-[-4px_0_15px_rgba(0,0,0,0.03)]">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -229,7 +274,7 @@ export default function Agenda({ kategori, surats, selectedYear, availableYears 
                                         </div>
                                     </td>
 
-                                    <td className="py-4 px-5 rounded-r-xl align-middle text-center">
+                                    <td className={`py-4 px-5 rounded-r-xl align-middle text-center sticky right-0 z-10 shadow-[-4px_0_15px_rgba(0,0,0,0.03)] transition-colors ${surat.isEmpty ? 'bg-slate-50/90 backdrop-blur-sm group-hover:bg-slate-100/90' : 'bg-white/90 backdrop-blur-sm group-hover:bg-white'}`}>
                                         {!surat.isEmpty && (usePage().props.auth as any).user.role === 'admin' && (
                                             <div className="flex justify-center items-center gap-2">
                                                 <Link 
@@ -352,6 +397,62 @@ export default function Agenda({ kategori, surats, selectedYear, availableYears 
                                     }}
                                 >
                                     Ya, Hapus Sekarang
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Tambah Nomor Manual */}
+            {showManualMenu && (
+                <div className="fixed top-0 left-0 w-screen h-screen bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-[450px] shadow-2xl overflow-hidden border-2 border-white/50 animate-in fade-in zoom-in duration-300">
+                        <div className="p-8">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-black text-slate-800 m-0">Tambah Nomor Kosong</h3>
+                                <button onClick={() => setShowManualMenu(false)} className="text-slate-400 hover:text-red-500 transition-colors">
+                                    <i className="fas fa-times text-lg"></i>
+                                </button>
+                            </div>
+                            
+                            <div className="space-y-4 mb-8">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-600 mb-2">Nomor Urut Surat</label>
+                                    <input 
+                                        type="number" 
+                                        value={manualSeq}
+                                        onChange={(e) => setManualSeq(e.target.value)}
+                                        placeholder="Contoh: 153"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-semibold text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-600 mb-2">Pilih Tanggal</label>
+                                    <input 
+                                        type="date" 
+                                        value={manualDate}
+                                        onChange={(e) => setManualDate(e.target.value)}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-semibold text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div className="flex gap-3 justify-end">
+                                <button 
+                                    className="px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+                                    onClick={() => setShowManualMenu(false)}
+                                >
+                                    Batal
+                                </button>
+                                <button 
+                                    className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                    disabled={!manualSeq || !manualDate}
+                                    onClick={() => {
+                                        window.location.href = `/surat/create/${kategori}?sequence=${manualSeq}&tanggal=${manualDate}`;
+                                    }}
+                                >
+                                    Buat Surat
                                 </button>
                             </div>
                         </div>
